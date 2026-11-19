@@ -29,6 +29,24 @@ const DESIGN_SYSTEMS = {
     colorAccent: '#E4CE9A',
     colorSlate: '#9CA3AF',
   },
+  warm: {
+    name: 'Warm',
+    fontDisplay: '"Space Grotesk", Inter, sans-serif',
+    fontBody: 'Inter, system-ui, sans-serif',
+    colorBg: '#FBF3E4',
+    colorInk: '#4C2F1F',
+    colorAccent: '#D97706',
+    colorSlate: '#78350F',
+  },
+  cool: {
+    name: 'Cool',
+    fontDisplay: '"Inter", system-ui, sans-serif',
+    fontBody: 'Inter, system-ui, sans-serif',
+    colorBg: '#EFF6FF',
+    colorInk: '#1E3A8A',
+    colorAccent: '#3B82F6',
+    colorSlate: '#1E40AF',
+  },
 };
 
 function pickSystem(niche) {
@@ -36,6 +54,8 @@ function pickSystem(niche) {
   if (n.includes('cafe') || n.includes('restaurant') || n.includes('bar')) return DESIGN_SYSTEMS.editorial;
   if (n.includes('law') || n.includes('legal') || n.includes('account')) return DESIGN_SYSTEMS.modern;
   if (n.includes('gym') || n.includes('fitness') || n.includes('club')) return DESIGN_SYSTEMS.bold;
+  if (n.includes('spa') || n.includes('salon') || n.includes('wellness')) return DESIGN_SYSTEMS.warm;
+  if (n.includes('tech') || n.includes('software') || n.includes('agency')) return DESIGN_SYSTEMS.cool;
   return DESIGN_SYSTEMS.editorial;
 }
 
