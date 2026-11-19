@@ -25,7 +25,7 @@ function showSection(name){
     a.classList.toggle('active', a.dataset.section === name);
   });
   $('topSection').textContent = name.charAt(0).toUpperCase() + name.slice(1);
-  const subs = { dashboard:'Your agency at a glance', targets:'Regions to scan', leads:'CRM — businesses found', sites:'Bespoke sites published', outreach:'Pitch sequences', receptionist:'AI phone numbers', runs:'Autonomous pipeline', settings:'Profile & plan' };
+  const subs = { dashboard:'Build real sites from real details', targets:'Regions you track (add leads manually)', leads:'CRM — your leads', sites:'Preview sites built', outreach:'Pitch drafts you send yourself', receptionist:'Demo script preview — not a live service', runs:'Bulk site builds', settings:'Profile & defaults' };
   $('topSub').textContent = subs[name] || '';
   window.scrollTo({ top: 0 });
   if (name === 'dashboard') loadDashboard();
@@ -60,8 +60,8 @@ async function loadDashboard(){
     const out = outRes.outreach || [];
     $('statLeads').textContent = leads.length;
     $('statSites').textContent = sites.length;
-    $('statSent').textContent = out.filter(o => o.status === 'sent').length;
-    $('statReplies').textContent = out.filter(o => o.status === 'replied').length;
+    $('statSent').textContent = out.filter(o => o.status === 'draft' || o.status === 'pending').length;
+    $('statReplies').textContent = out.filter(o => o.status === 'sent').length;
     const activity = [];
     leads.slice(0, 3).forEach(l => activity.push({ m: `New lead: ${l.name}`, d: l.niche || '—', t: l.created_at }));
     sites.slice(0, 3).forEach(s => activity.push({ m: `Site published: ${s.title || s.url}`, d: s.status, t: s.created_at }));
@@ -136,7 +136,8 @@ async function loadOutreach(){
     if (outreach.length === 0) { wrap.innerHTML = '<div class="empty">No outreach yet. Pitch a lead to start.</div>'; return; }
     wrap.innerHTML = `<table><thead><tr><th>Lead</th><th>Channel</th><th>Step</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead><tbody>${outreach.map(o => `
       <tr><td>${escapeHtml(o.lead_id)}</td><td>${o.channel}</td><td>${o.sequence_step}</td><td>${escapeHtml(o.subject || '—')}</td><td><span class="badge badge-${o.status}">${o.status}</span></td><td>
-        <button class="btn-sm" onclick="appMarkSent('${o.id}')">Mark sent</button>
+        <a class="btn-sm" href="mailto:?subject=${encodeURIComponent(o.subject || '')}&body=${encodeURIComponent(o.body || '')}">Open in email</a>
+        <button class="btn-sm" onclick="appMarkSent('${o.id}')" title="Only after you have actually sent it">Mark sent</button>
         ${o.sequence_step < 5 ? `<button class="btn-sm" onclick="appNextStep('${o.id}','${escapeHtml(o.lead_id)}',${o.sequence_step + 1})">Next step</button>` : ''}
       </td></tr>`).join('')}</tbody></table>`;
   } catch (e) { console.error(e); }
@@ -201,13 +202,15 @@ window.appDeleteTarget = async (id) => {
 };
 
 window.appPitchLead = async (id, name) => {
-  if (!confirm(`Send a personalised pitch to ${name}?`)) return;
+  if (!confirm(`Prepare a pitch draft for ${name}? You send it yourself from the Outreach screen.`)) return;
   try {
-    await api('/api/outreach', { method: 'POST', body: { lead_id: id, channel: 'email', sequence_step: 1, subject: `Here's a website I built for ${name}`, body: `Hi ${name}, I built a bespoke website for your business using your own photos and details. Want to keep it?` } });
+    const subject = `A website preview for ${name}`;
+    const body = `Hi ${name},\n\nI put together a one-page website preview for your business. Would you like to see it?\n\nThanks,\nArian`;
+    await api('/api/outreach', { method: 'POST', body: { lead_id: id, channel: 'email', sequence_step: 1, subject, body, status: 'draft' } });
     loadOutreach();
-    await api(`/api/leads/${id}`, { method: 'PATCH', body: { status: 'pitched', last_contacted_at: new Date().toISOString() } });
+    await api(`/api/leads/${id}`, { method: 'PATCH', body: { status: 'pitched' } });
     loadLeads();
-  } catch (e) { alert('Failed to send pitch'); }
+  } catch (e) { alert('Failed to prepare pitch'); }
 };
 
 window.appBuildSite = async (id, name) => {
@@ -241,7 +244,7 @@ window.appNextStep = async (outId, leadId, nextStep) => {
     `Hi, this is my final note. Your site is live whenever you're ready.`,
   ];
   try {
-    await api('/api/outreach', { method: 'POST', body: { lead_id: leadId, channel: 'email', sequence_step: nextStep, subject: subjects[nextStep - 2] || 'Follow-up', body: bodies[nextStep - 2] || 'Following up', status: 'pending' } });
+    await api('/api/outreach', { method: 'POST', body: { lead_id: leadId, channel: 'email', sequence_step: nextStep, subject: subjects[nextStep - 2] || 'Follow-up', body: bodies[nextStep - 2] || 'Following up', status: 'draft' } });
     loadOutreach();
   } catch (e) { alert('Failed to add follow-up step'); }
 };
@@ -254,18 +257,16 @@ window.appDeleteRec = async (id) => {
 
 window.appSimulateCall = async (phone) => {
   const area = $('call-log-area');
-  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const transcript = [
-    { who: 'Caller', text: "Hi, I'd like to book an appointment." },
-    { who: 'Receptionist', text: "Sure! What day and time works for you?" },
+  const script = [
+    { who: 'Caller', text: 'Hi, I would like to book an appointment.' },
+    { who: 'Receptionist', text: 'Sure, what day and time works for you?' },
     { who: 'Caller', text: 'Tomorrow at 2pm, please.' },
-    { who: 'Receptionist', text: "Got it — tomorrow at 2pm it is. I'll send a confirmation text." },
+    { who: 'Receptionist', text: 'Noted. Let me pass that to the business to confirm.' },
   ];
-  const html = transcript.map((t) => `<div style="margin:6px 0"><strong style="color:var(--gold)">${escapeHtml(t.who)}:</strong> ${escapeHtml(t.text)}</div>`).join('');
-  area.innerHTML = `<div style="margin-bottom:8px"><strong>Call to ${escapeHtml(phone)} — ${now}</strong></div>${html}<div style="margin-top:8px;font-size:11px;color:var(--slate)">AI Receptionist answered · 2 min 14s · Appointment booked</div><hr style="margin:12px 0;border:none;border-top:1px solid var(--line)">${area.innerHTML ? '' : ''}`;
-  // Prepend new call above existing
-  const existing = area.innerHTML;
-  area.innerHTML = `<div style="margin-bottom:8px"><strong>Call to ${escapeHtml(phone)} — ${now}</strong></div>${html}<div style="margin-top:8px;font-size:11px;color:var(--slate)">AI Receptionist answered · 2 min 14s · Appointment booked</div><hr style="margin:12px 0;border:none;border-top:1px solid var(--line)">${existing}`;
+  const html = script.map((t) => `<div style="margin:6px 0"><strong style="color:var(--gold)">${escapeHtml(t.who)}:</strong> ${escapeHtml(t.text)}</div>`).join('');
+  area.innerHTML = `<div style="margin-bottom:8px"><strong>Sample script for ${escapeHtml(phone)}</strong></div>
+    <div style="font-size:11px;color:var(--slate);margin-bottom:10px">DEMO ONLY — no call was placed and no appointment was booked. Connect a telephony provider to answer real calls.</div>
+    ${html}<hr style="margin:12px 0;border:none;border-top:1px solid var(--line)">${area.innerHTML}`;
 };
 
 window.appRunProgress = async (id) => {
@@ -297,11 +298,55 @@ window.appSaveSettings = async () => {
 
 window.appStartRun = async () => {
   const { targets = [] } = await api('/api/targets');
-  if (targets.length === 0) return alert('Add a target region first');
+  if (targets.length === 0) return alert('Add a target region first.');
   const t = targets[0];
-  await api('/api/runs', { method: 'POST', body: { target_id: t.id } });
-  loadRuns();
+  const created = await api('/api/runs', { method: 'POST', body: { target_id: t.id } });
+  const runId = created.run.id;
   showSection('runs');
+  try {
+    const [{ leads = [] }, { sites = [] }] = await Promise.all([api('/api/leads'), api('/api/sites')]);
+    const alreadyBuilt = new Set(sites.map((s) => s.lead_id));
+    const todo = leads.filter((l) => !alreadyBuilt.has(l.id));
+    await api(`/api/runs/${runId}`, { method: 'PATCH', body: { phase: 'build', status: 'running', progress: 30, started_at: new Date().toISOString() } });
+    let made = 0;
+    for (const lead of todo) {
+      try { await api('/api/builder', { method: 'POST', body: { lead_id: lead.id } }); made += 1; } catch (e) { /* keep going */ }
+      const pct = 30 + Math.round((made / Math.max(todo.length, 1)) * 60);
+      await api(`/api/runs/${runId}`, { method: 'PATCH', body: { phase: 'build', status: 'running', progress: pct } });
+    }
+    await api(`/api/runs/${runId}`, { method: 'PATCH', body: { phase: 'done', status: 'completed', progress: 100, finished_at: new Date().toISOString(), result: { sitesBuilt: made, leadsConsidered: todo.length } } });
+    alert(`Run complete: ${made} site(s) built from ${todo.length} lead(s) that had no site. Check Outreach drafts before sending anything.`);
+  } catch (e) {
+    alert(`Run failed: ${e.message}`);
+  }
+  loadRuns(); loadLeads(); loadSites(); loadDashboard();
+};
+
+// ---- Real site build from user-supplied details ----
+
+window.buildFromForm = async () => {
+  const val = (id) => ($(id)?.value || '').trim();
+  const name = val('bfName');
+  if (!name) { alert('Enter a business name first.'); return; }
+  const photos = val('bfPhotos').split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+  const services = val('bfServices').split(',').map((s) => s.trim()).filter(Boolean);
+  const result = $('bfResult');
+  result.innerHTML = 'Building preview…';
+  try {
+    const data = await api('/api/freebuild', {
+      method: 'POST',
+      body: {
+        name, region: val('bfAddress'), niche: val('bfNiche'), address: val('bfAddress'),
+        phone: val('bfPhone'), email: val('bfEmail'), website: val('bfWebsite'),
+        about: val('bfAbout'), services, photos, design: val('bfDesign'),
+      },
+    });
+    result.innerHTML = `<strong>Preview ready.</strong> <a href="${escapeHtml(data.siteUrl)}" target="_blank" rel="noopener">Open site</a><br><span style="color:var(--slate)">${escapeHtml(data.note || '')}</span>`;
+    loadDashboard();
+    loadSites();
+  } catch (e) {
+    result.textContent = `Could not build preview: ${e.message}`;
+  }
 };
 
 // ---- Init ----
@@ -316,6 +361,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('btnRefresh').addEventListener('click', () => { const s = document.querySelector('.nav-item.active').dataset.section; showSection(s); });
   $('btnNewRun').addEventListener('click', appStartRun);
   $('btnAddTarget').addEventListener('click', appAddTarget);
+  $('btnFreeBuild').addEventListener('click', buildFromForm);
   $('btnSaveSettings').addEventListener('click', appSaveSettings);
 
   await loadUser();

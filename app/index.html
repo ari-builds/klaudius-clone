@@ -45,23 +45,35 @@
 
     <section class="panel" id="section-dashboard">
       <div class="stats">
-        <div class="stat"><div class="stat-n" id="statLeads">—</div><div class="stat-l">Leads found</div></div>
+        <div class="stat"><div class="stat-n" id="statLeads">—</div><div class="stat-l">Leads in CRM</div></div>
         <div class="stat"><div class="stat-n" id="statSites">—</div><div class="stat-l">Sites built</div></div>
-        <div class="stat"><div class="stat-n" id="statSent">—</div><div class="stat-l">Pitches sent</div></div>
-        <div class="stat"><div class="stat-n" id="statReplies">—</div><div class="stat-l">Replies</div></div>
+        <div class="stat"><div class="stat-n" id="statSent">—</div><div class="stat-l">Pitch drafts</div></div>
+        <div class="stat"><div class="stat-n" id="statReplies">—</div><div class="stat-l">Marked sent</div></div>
       </div>
 
       <div class="grid2">
         <div class="card">
-          <div class="card-head"><div class="card-title">Quick start</div></div>
+          <div class="card-head"><div class="card-title">Build a site from real details</div></div>
           <div class="card-body">
-            <p class="card-p">Set your region, start an autonomous run, and Klaudius finds businesses, builds sites, and pitches them — while you sleep.</p>
-            <ol class="card-steps">
-              <li><strong>1. Set region</strong> — Go to Targets and add your region + niche.</li>
-              <li><strong>2. Start run</strong> — Klaudius scans, scores, and builds.</li>
-              <li><strong>3. Review leads</strong> — CRM shows every business found.</li>
-              <li><strong>4. Pitch</strong> — Outreach sends personalised messages with live site links.</li>
-            </ol>
+            <p class="card-p">Enter a business you actually know. Klaudius builds a one-page preview using only the details you give it — no invented phone numbers, hours or photos.</p>
+            <div class="form-row" style="grid-template-columns:1fr 1fr">
+              <input type="text" id="bfName" placeholder="Business name *" class="input">
+              <input type="text" id="bfNiche" placeholder="Niche (e.g. plumber)" class="input">
+              <input type="text" id="bfAddress" placeholder="Town / address" class="input">
+              <input type="text" id="bfPhone" placeholder="Phone" class="input">
+              <input type="email" id="bfEmail" placeholder="Business email" class="input">
+              <input type="text" id="bfWebsite" placeholder="Existing website (optional)" class="input">
+              <select id="bfDesign" class="input">
+                <option value="">Auto design</option>
+                <option value="editorial">Editorial</option><option value="modern">Modern</option>
+                <option value="bold">Bold</option><option value="warm">Warm</option><option value="cool">Cool</option>
+              </select>
+              <input type="text" id="bfServices" placeholder="Services, comma separated" class="input">
+            </div>
+            <textarea id="bfAbout" class="input" rows="2" placeholder="About the business (optional)" style="width:100%;margin-top:10px"></textarea>
+            <textarea id="bfPhotos" class="input" rows="2" placeholder="Photo URLs, one per line (optional)" style="width:100%;margin-top:8px"></textarea>
+            <button class="btn" id="btnFreeBuild" style="margin-top:12px">Build preview site</button>
+            <div id="bfResult" style="margin-top:12px;font-size:13px"></div>
           </div>
         </div>
         <div class="card">
@@ -74,7 +86,7 @@
     </section>
 
     <section class="panel" id="section-targets" style="display:none">
-      <div class="card-head"><div class="card-title">Targets</div><div class="card-sub">Regions Klaudius scans for businesses without websites.</div></div>
+      <div class="card-head"><div class="card-title">Targets</div><div class="card-sub">Regions you track. Business discovery is manual — add real leads from your own research.</div></div>
       <div class="card">
         <div class="form-row">
           <input type="text" id="tgtRegion" placeholder="Region (e.g. Cork, Ireland)" class="input">
@@ -100,17 +112,17 @@
     </section>
 
     <section class="panel" id="section-outreach" style="display:none">
-      <div class="card-head"><div class="card-title">Outreach</div><div class="card-sub">Personalised pitch messages and 5-touch follow-up sequences.</div></div>
+      <div class="card-head"><div class="card-title">Outreach</div><div class="card-sub">Pitch drafts you review and send yourself. Nothing is sent automatically.</div></div>
       <div class="table-wrap" id="outreachTable"></div>
     </section>
 
     <section class="panel" id="section-receptionist" style="display:none">
-      <div class="card-head"><div class="card-title">AI Receptionist</div><div class="card-sub">A phone number per business that answers missed calls and texts each job.</div></div>
+      <div class="card-head"><div class="card-title">Receptionist script preview</div><div class="card-sub">Demo only — no phone service is connected and no real calls are answered.</div></div>
       <div class="table-wrap" id="receptionistTable"></div>
     </section>
 
     <section class="panel" id="section-runs" style="display:none">
-      <div class="card-head"><div class="card-title">Autonomous runs</div><div class="card-sub">Find → gather → build → pitch, running on autopilot.</div></div>
+      <div class="card-head"><div class="card-title">Build runs</div><div class="card-sub">Builds a site for every lead that does not have one yet. No messages are sent.</div></div>
       <div class="table-wrap" id="runsTable"></div>
     </section>
 
