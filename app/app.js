@@ -135,6 +135,7 @@ async function loadOutreach(){
     wrap.innerHTML = `<table><thead><tr><th>Lead</th><th>Channel</th><th>Step</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead><tbody>${outreach.map(o => `
       <tr><td>${escapeHtml(o.lead_id)}</td><td>${o.channel}</td><td>${o.sequence_step}</td><td>${escapeHtml(o.subject || '—')}</td><td><span class="badge badge-${o.status}">${o.status}</span></td><td>
         <button class="btn-sm" onclick="appMarkSent('${o.id}')">Mark sent</button>
+        ${o.sequence_step < 5 ? `<button class="btn-sm" onclick="appNextStep('${o.id}','${escapeHtml(o.lead_id)}',${o.sequence_step + 1})">Next step</button>` : ''}
       </td></tr>`).join('')}</tbody></table>`;
   } catch (e) { console.error(e); }
 }
@@ -219,6 +220,20 @@ window.appDeleteLead = async (id) => {
 window.appMarkSent = async (id) => {
   await api(`/api/outreach/${id}`, { method: 'PATCH', body: { status: 'sent', sent_at: new Date().toISOString() } });
   loadOutreach();
+};
+
+window.appNextStep = async (outId, leadId, nextStep) => {
+  const subjects = ['Following up on your website', 'Any questions about your new site?', 'Still interested in going online?', 'Final note — your site is ready'];
+  const bodies = [
+    `Hi, just following up on the website I built for you. It's live and ready — want a link?`,
+    `Hi, any questions about your new website? I'm happy to walk you through it.`,
+    `Hi, just checking in — your bespoke site is published. Want to take a look?`,
+    `Hi, this is my final note. Your site is live whenever you're ready.`,
+  ];
+  try {
+    await api('/api/outreach', { method: 'POST', body: { lead_id: leadId, channel: 'email', sequence_step: nextStep, subject: subjects[nextStep - 2] || 'Follow-up', body: bodies[nextStep - 2] || 'Following up', status: 'pending' } });
+    loadOutreach();
+  } catch (e) { alert('Failed to add follow-up step'); }
 };
 
 window.appDeleteRec = async (id) => {
