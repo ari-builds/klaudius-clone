@@ -11,6 +11,6 @@
     { "src": "/api/freebuild", "dest": "/api/freebuild.js" },
     { "src": "/app/(.*)", "dest": "/app/$1" },
     { "src": "/(favicon.ico|manifest.json|sw.js)", "dest": "/public/$1" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
+    { "src": "/(.*)", "dest": "/app/index.html" }
   ]
 }
