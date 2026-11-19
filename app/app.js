@@ -105,6 +105,7 @@ async function loadLeads(){
     wrap.innerHTML = `<table><thead><tr><th>Business</th><th>Website</th><th>Niche</th><th>Score</th><th>Status</th><th>Actions</th></tr></thead><tbody>${filtered.map(l => `
       <tr><td><strong>${escapeHtml(l.name)}</strong></td><td>${escapeHtml(l.website || '—')}</td><td>${escapeHtml(l.niche || '—')}</td><td>${l.score || 0}</td><td><span class="badge badge-${l.status}">${l.status}</span></td><td>
         <button class="btn-sm" onclick="appPitchLead('${l.id}','${escapeHtml(l.name)}')">Pitch</button>
+        ${l.status !== 'site-built' && l.status !== 'published' ? `<button class="btn-sm" onclick="appBuildSite('${l.id}','${escapeHtml(l.name)}')">Build site</button>` : ''}
         <button class="btn-sm danger" onclick="appDeleteLead('${l.id}')">Delete</button>
       </td></tr>`).join('')}</tbody></table>`;
     $('leadStatus').onchange = loadLeads;
@@ -196,6 +197,17 @@ window.appPitchLead = async (id, name) => {
     await api(`/api/leads/${id}`, { method: 'PATCH', body: { status: 'pitched', last_contacted_at: new Date().toISOString() } });
     loadLeads();
   } catch (e) { alert('Failed to send pitch'); }
+};
+
+window.appBuildSite = async (id, name) => {
+  if (!confirm(`Build a bespoke website for ${name}?`)) return;
+  try {
+    const result = await api('/api/builder', { method: 'POST', body: { lead_id: id } });
+    await api(`/api/leads/${id}`, { method: 'PATCH', body: { status: 'site-built', last_contacted_at: new Date().toISOString() } });
+    loadLeads();
+    loadSites();
+    alert(`Site built: ${result.site.url}`);
+  } catch (e) { alert('Failed to build site'); }
 };
 
 window.appDeleteLead = async (id) => {
