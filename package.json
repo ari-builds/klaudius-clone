@@ -1,0 +1,12 @@
+{
+  "name": "klaudius-clone",
+  "version": "1.0.0",
+  "description": "Autonomous AI agency platform — find, build, pitch websites to businesses at scale.",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "check": "node --check api/*.js app/*.js tools/*.cjs",
+    "smoke": "node tools/smoke-klaudius.cjs"
+  },
+  "keywords": ["ai-agency", "website-builder", "automation", "crm", "outreach"]
+}

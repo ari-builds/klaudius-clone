@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klaudius — Agency Dashboard</title>
+<meta name="description" content="Run your autonomous AI agency — find businesses, build sites, pitch, and manage outreach.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="mark">K<span class="g">laudius</span></div>
+      <div class="side-ver">v1.0 · autonomous</div>
+    </div>
+    <nav class="side-nav">
+      <a class="nav-item active" data-section="dashboard" href="#"><span class="ni">▲</span>Dashboard</a>
+      <a class="nav-item" data-section="targets" href="#"><span class="ni">📍</span>Targets</a>
+      <a class="nav-item" data-section="leads" href="#"><span class="ni">🏢</span>Leads (CRM)</a>
+      <a class="nav-item" data-section="sites" href="#"><span class="ni">🌐</span>Sites</a>
+      <a class="nav-item" data-section="outreach" href="#"><span class="ni">✉️</span>Outreach</a>
+      <a class="nav-item" data-section="receptionist" href="#"><span class="ni">☎️</span>Receptionist</a>
+      <a class="nav-item" data-section="runs" href="#"><span class="ni">🔄</span>Runs</a>
+      <a class="nav-item" data-section="settings" href="#"><span class="ni">⚙️</span>Settings</a>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user" id="sideUser">Loading…</div>
+      <button class="side-btn" id="btnLogout">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="top-btn" id="btnMenu" aria-label="Toggle menu">☰</button>
+      <div class="top-title"><span id="topSection">Dashboard</span><span class="top-sub" id="topSub">Your agency at a glance</span></div>
+      <div class="top-right">
+        <button class="top-btn ghost" id="btnRefresh" title="Refresh">↻</button>
+        <button class="top-btn primary" id="btnNewRun">Start run</button>
+      </div>
+    </header>
+
+    <section class="panel" id="section-dashboard">
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="statLeads">—</div><div class="stat-l">Leads found</div></div>
+        <div class="stat"><div class="stat-n" id="statSites">—</div><div class="stat-l">Sites built</div></div>
+        <div class="stat"><div class="stat-n" id="statSent">—</div><div class="stat-l">Pitches sent</div></div>
+        <div class="stat"><div class="stat-n" id="statReplies">—</div><div class="stat-l">Replies</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Quick start</div></div>
+          <div class="card-body">
+            <p class="card-p">Set your region, start an autonomous run, and Klaudius finds businesses, builds sites, and pitches them — while you sleep.</p>
+            <ol class="card-steps">
+              <li><strong>1. Set region</strong> — Go to Targets and add your region + niche.</li>
+              <li><strong>2. Start run</strong> — Klaudius scans, scores, and builds.</li>
+              <li><strong>3. Review leads</strong> — CRM shows every business found.</li>
+              <li><strong>4. Pitch</strong> — Outreach sends personalised messages with live site links.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Recent activity</div></div>
+          <div class="card-body" id="activityList">
+            <div class="act-item"><div class="act-m">No activity yet</div><div class="act-d">Start your first run to see activity here.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="section-targets" style="display:none">
+      <div class="card-head"><div class="card-title">Targets</div><div class="card-sub">Regions Klaudius scans for businesses without websites.</div></div>
+      <div class="card">
+        <div class="form-row">
+          <input type="text" id="tgtRegion" placeholder="Region (e.g. Cork, Ireland)" class="input">
+          <input type="text" id="tgtNiche" placeholder="Niche (e.g. plumbers)" class="input">
+          <button class="btn" id="btnAddTarget">Add target</button>
+        </div>
+      </div>
+      <div class="table-wrap" id="targetsTable"></div>
+    </section>
+
+    <section class="panel" id="section-leads" style="display:none">
+      <div class="card-head"><div class="card-title">Leads (CRM)</div><div class="card-sub">Businesses found, scored, and ready to pitch.</div></div>
+      <div class="form-row">
+        <select id="leadStatus" class="input"><option value="">All statuses</option><option value="new">New</option><option value="contacted">Contacted</option><option value="pitched">Pitched</option><option value="closed">Closed</option></select>
+        <input type="text" id="leadSearch" placeholder="Search name, website, niche" class="input">
+      </div>
+      <div class="table-wrap" id="leadsTable"></div>
+    </section>
+
+    <section class="panel" id="section-sites" style="display:none">
+      <div class="card-head"><div class="card-title">Sites built</div><div class="card-sub">Bespoke websites Klaudius has published for your leads.</div></div>
+      <div class="table-wrap" id="sitesTable"></div>
+    </section>
+
+    <section class="panel" id="section-outreach" style="display:none">
+      <div class="card-head"><div class="card-title">Outreach</div><div class="card-sub">Personalised pitch messages and 5-touch follow-up sequences.</div></div>
+      <div class="table-wrap" id="outreachTable"></div>
+    </section>
+
+    <section class="panel" id="section-receptionist" style="display:none">
+      <div class="card-head"><div class="card-title">AI Receptionist</div><div class="card-sub">A phone number per business that answers missed calls and texts each job.</div></div>
+      <div class="table-wrap" id="receptionistTable"></div>
+    </section>
+
+    <section class="panel" id="section-runs" style="display:none">
+      <div class="card-head"><div class="card-title">Autonomous runs</div><div class="card-sub">Find → gather → build → pitch, running on autopilot.</div></div>
+      <div class="table-wrap" id="runsTable"></div>
+    </section>
+
+    <section class="panel" id="section-settings" style="display:none">
+      <div class="card-head"><div class="card-title">Settings</div><div class="card-sub">Your profile, plan, and default region.</div></div>
+      <div class="card">
+        <div class="form-row" style="grid-template-columns:1fr 1fr 200px">
+          <input type="text" id="setName" placeholder="Your name" class="input">
+          <input type="text" id="setRegion" placeholder="Default region" class="input">
+          <select id="setPlan" class="input"><option value="starter">Starter</option><option value="pro">Pro</option></select>
+        </div>
+        <button class="btn" id="btnSaveSettings">Save settings</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
