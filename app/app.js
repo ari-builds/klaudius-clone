@@ -65,12 +65,14 @@ async function loadDashboard(){
     const activity = [];
     leads.slice(0, 3).forEach(l => activity.push({ m: `New lead: ${l.name}`, d: l.niche || '—', t: l.created_at }));
     sites.slice(0, 3).forEach(s => activity.push({ m: `Site published: ${s.title || s.url}`, d: s.status, t: s.created_at }));
+    out.slice(0, 3).forEach(o => activity.push({ m: `Pitch sent: ${o.subject || '(no subject)'}`, d: `Step ${o.sequence_step} · ${o.channel}`, t: o.created_at || o.sent_at }));
+    activity.sort((a, b) => new Date(b.t || 0) - new Date(a.t || 0));
     const list = $('activityList');
     list.innerHTML = '';
     if (activity.length === 0) {
       list.innerHTML = '<div class="act-item"><div class="act-m">No activity yet</div><div class="act-d">Start your first run to see activity here.</div></div>';
     } else {
-      activity.forEach(a => {
+      activity.slice(0, 6).forEach(a => {
         list.innerHTML += `<div class="act-item"><div class="act-m">${escapeHtml(a.m)}</div><div class="act-d">${escapeHtml(a.d)}</div></div>`;
       });
     }
