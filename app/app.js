@@ -148,9 +148,17 @@ async function loadReceptionist(){
     if (receptionists.length === 0) { wrap.innerHTML = '<div class="empty">No receptionist numbers yet. Add one below.</div>'; return; }
     wrap.innerHTML = `<table><thead><tr><th>Phone number</th><th>Voice</th><th>Status</th><th>Actions</th></tr></thead><tbody>${receptionists.map(r => `
       <tr><td><strong>${escapeHtml(r.phone_number)}</strong></td><td>${escapeHtml(r.voice || 'alloy')}</td><td><span class="badge badge-${r.status}">${r.status}</span></td><td>
+        <button class="btn-sm" onclick="appSimulateCall('${r.phone_number}')">Simulate call</button>
         <button class="btn-sm danger" onclick="appDeleteRec('${r.id}')">Delete</button>
       </td></tr>`).join('')}</tbody></table>`;
   } catch (e) { console.error(e); }
+  // Call log area (below table, injected by simulate call)
+  if (!$('call-log-area')) {
+    const area = document.createElement('div');
+    area.id = 'call-log-area';
+    area.style.marginTop = '16px';
+    wrap.parentNode.insertBefore(area, wrap.nextSibling);
+  }
 }
 
 async function loadRuns(){
@@ -240,6 +248,22 @@ window.appDeleteRec = async (id) => {
   if (!confirm('Delete this receptionist?')) return;
   await api(`/api/receptionists/${id}`, { method: 'DELETE' });
   loadReceptionist();
+};
+
+window.appSimulateCall = async (phone) => {
+  const area = $('call-log-area');
+  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const transcript = [
+    { who: 'Caller', text: "Hi, I'd like to book an appointment." },
+    { who: 'Receptionist', text: "Sure! What day and time works for you?" },
+    { who: 'Caller', text: 'Tomorrow at 2pm, please.' },
+    { who: 'Receptionist', text: "Got it — tomorrow at 2pm it is. I'll send a confirmation text." },
+  ];
+  const html = transcript.map((t) => `<div style="margin:6px 0"><strong style="color:var(--gold)">${escapeHtml(t.who)}:</strong> ${escapeHtml(t.text)}</div>`).join('');
+  area.innerHTML = `<div style="margin-bottom:8px"><strong>Call to ${escapeHtml(phone)} — ${now}</strong></div>${html}<div style="margin-top:8px;font-size:11px;color:var(--slate)">AI Receptionist answered · 2 min 14s · Appointment booked</div><hr style="margin:12px 0;border:none;border-top:1px solid var(--line)">${area.innerHTML ? '' : ''}`;
+  // Prepend new call above existing
+  const existing = area.innerHTML;
+  area.innerHTML = `<div style="margin-bottom:8px"><strong>Call to ${escapeHtml(phone)} — ${now}</strong></div>${html}<div style="margin-top:8px;font-size:11px;color:var(--slate)">AI Receptionist answered · 2 min 14s · Appointment booked</div><hr style="margin:12px 0;border:none;border-top:1px solid var(--line)">${existing}`;
 };
 
 window.appRunProgress = async (id) => {
