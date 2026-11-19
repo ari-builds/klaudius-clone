@@ -67,7 +67,7 @@ module.exports = async (req, res) => {
   await db.query(`insert into leads (id, user_id, target_id, name, website, phone, email, address, niche, has_website, status, score, photos, details, last_contacted_at, created_at, updated_at)
    values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
     [leadId, 'demo-user', targetId, leadData.name, leadData.website || '', leadData.phone || '', leadData.email || '', leadData.address || '', leadData.niche || '',
-     leadData.website ? 1 : 0, 'site-built', hasRealData ? null : 0, JSON.stringify(leadData.photos || []), JSON.stringify(details), null, now, now]);
+     leadData.website ? 1 : 0, 'site-built', hasRealData ? 100 : 0, JSON.stringify(leadData.photos || []), JSON.stringify(details), null, now, now]);
 
   const html = buildSiteHtml(leadData, { sample: !hasRealData, design: details.design });
   const slug = `${leadData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'business'}-${siteId.slice(-6)}`;
