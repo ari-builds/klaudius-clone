@@ -7,6 +7,7 @@
   ],
   "routes": [
     { "src": "/api/([^/]+)(/.*)?", "dest": "/api/$1.js" },
+    { "src": "/site/([^/]+)", "dest": "/api/site.js?slug=$1" },
     { "src": "/app/(.*)", "dest": "/app/$1" },
     { "src": "/(favicon.ico|manifest.json|sw.js)", "dest": "/public/$1" },
     { "src": "/(.*)", "dest": "/public/index.html" }
