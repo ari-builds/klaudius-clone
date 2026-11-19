@@ -342,10 +342,16 @@
   <div class="container">
     <h2>Want to see what Klaudius would build where you are?</h2>
     <p>Tell us your region. Klaudius finds a real business with no website, builds it a real live site, and emails you the result — free, before you've spent a penny.</p>
-    <div class="footer-actions">
-      <a href="#pricing" class="btn">Get Klaudius →</a>
-      <a href="#tour" class="btn btn--ghost">Take the 3-minute tour →</a>
-    </div>
+    <form id="freebuild-form" class="freebuild-form" novalidate>
+      <div class="form-row">
+        <input type="text" id="fb-region" placeholder="Your region (e.g. Cork, Ireland)" class="input" required>
+        <input type="email" id="fb-email" placeholder="Your email address" class="input" required>
+        <button type="submit" class="btn">Get my free build →</button>
+      </div>
+      <p class="fb-msg" id="fb-msg" style="margin-top:12px;font-size:13px;color:var(--slate);min-height:20px"></p>
+      <a class="btn btn--ghost" href="#pricing" style="margin-top:12px;display:inline-block">Get Klaudius →</a>
+      <a class="btn btn--ghost" href="#tour" style="margin-top:12px;display:inline-block">Take the 3-minute tour →</a>
+    </form>
   </div>
 </section>
 </main>
@@ -407,6 +413,41 @@
       if(el){e.preventDefault();el.scrollIntoView({behavior:'smooth'});}
     });
   });
+  // Free build form
+  const fbForm = document.getElementById('freebuild-form');
+  const fbMsg = document.getElementById('fb-msg');
+  if (fbForm) {
+    fbForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const region = document.getElementById('fb-region').value.trim();
+      const email = document.getElementById('fb-email').value.trim();
+      const btn = fbForm.querySelector('button[type="submit"]');
+      const orig = btn.textContent;
+      fbMsg.textContent = 'Building your site…';
+      fbMsg.style.color = 'var(--slate)';
+      btn.disabled = true;
+      btn.textContent = 'Building…';
+      try {
+        const r = await fetch('/api/freebuild', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ region, email }),
+        });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || 'Build failed');
+        fbMsg.innerHTML = `Your site is ready: <a href="${j.siteUrl}" target="_blank" rel="noopener" style="color:var(--gold);font-weight:600">${j.siteUrl}</a>. We’ve also emailed it to ${escapeHtml(email)}.`;
+        fbMsg.style.color = 'var(--ink)';
+        fbForm.reset();
+      } catch (err) {
+        fbMsg.textContent = err.message || 'Something went wrong. Try again.';
+        fbMsg.style.color = '#b0432f';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+      }
+    });
+  }
+  function escapeHtml(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;" })[c]); }
 </script>
 </body>
 </html>
