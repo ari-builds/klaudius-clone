@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Klaudius — Agency Dashboard</title>
-<meta name="description" content="Klaudius — build real one-page sites from business details you supply.">
+<meta name="description" content="Klaudius — build private one-page previews from business details you supply and review drafts you send yourself.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='12'%20fill='%23171717'/%3E%3Cpath%20d='M32%2012%2052%2048H12z'%20fill='%23c8a96b'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -15,7 +16,7 @@
   <aside class="sidebar">
     <div class="side-brand">
       <div class="mark">K<span class="g">laudius</span></div>
-      <div class="side-ver">v1.0 · free tool</div>
+      <div class="side-ver">v1.0 · personal tool</div>
     </div>
     <nav class="side-nav">
       <a class="nav-item active" data-section="dashboard" href="#"><span class="ni">▲</span>Dashboard</a>
@@ -23,6 +24,7 @@
       <a class="nav-item" data-section="leads" href="#"><span class="ni">🏢</span>Leads (CRM)</a>
       <a class="nav-item" data-section="sites" href="#"><span class="ni">🌐</span>Sites</a>
       <a class="nav-item" data-section="outreach" href="#"><span class="ni">✉️</span>Outreach</a>
+      <a class="nav-item" data-section="review" href="#"><span class="ni">✅</span>Review</a>
       <a class="nav-item" data-section="receptionist" href="#"><span class="ni">☎️</span>Receptionist</a>
       <a class="nav-item" data-section="runs" href="#"><span class="ni">🔄</span>Runs</a>
       <a class="nav-item" data-section="settings" href="#"><span class="ni">⚙️</span>Settings</a>
@@ -46,16 +48,17 @@
     <section class="panel" id="section-dashboard">
       <div class="stats">
         <div class="stat"><div class="stat-n" id="statLeads">—</div><div class="stat-l">Leads in CRM</div></div>
-        <div class="stat"><div class="stat-n" id="statSites">—</div><div class="stat-l">Sites built</div></div>
-        <div class="stat"><div class="stat-n" id="statSent">—</div><div class="stat-l">Pitch drafts</div></div>
-        <div class="stat"><div class="stat-n" id="statReplies">—</div><div class="stat-l">Marked sent</div></div>
+        <div class="stat"><div class="stat-n" id="statSites">—</div><div class="stat-l">Previews generated</div></div>
+        <div class="stat"><div class="stat-n" id="statDrafts">—</div><div class="stat-l">Pitch drafts</div></div>
+        <div class="stat"><div class="stat-n" id="statSent">—</div><div class="stat-l">Confirmed sent by you</div></div>
+        <div class="stat"><div class="stat-n" id="statReview">—</div><div class="stat-l">Needs review</div></div>
       </div>
 
       <div class="grid2">
         <div class="card">
-          <div class="card-head"><div class="card-title">Build a site from real details</div></div>
+          <div class="card-head"><div class="card-title">Build a preview from real details</div></div>
           <div class="card-body">
-            <p class="card-p">Enter a business you actually know. Klaudius builds a one-page preview using only the details you give it — no invented phone numbers, hours or photos.</p>
+            <p class="card-p">Enter a business you actually know. Klaudius builds a private one-page preview using only the details you give it — no invented phone numbers, hours or photos. Nothing is published or sent automatically.</p>
             <div class="form-row" style="grid-template-columns:1fr 1fr">
               <input type="text" id="bfName" placeholder="Business name *" class="input">
               <input type="text" id="bfNiche" placeholder="Niche (e.g. plumber)" class="input">
@@ -79,14 +82,14 @@
         <div class="card">
           <div class="card-head"><div class="card-title">Recent activity</div></div>
           <div class="card-body" id="activityList">
-            <div class="act-item"><div class="act-m">No activity yet</div><div class="act-d">Start your first run to see activity here.</div></div>
+            <div class="act-item"><div class="act-m">No activity yet</div><div class="act-d">Add a verified lead or build a preview to see activity here.</div></div>
           </div>
         </div>
       </div>
     </section>
 
     <section class="panel" id="section-targets" style="display:none">
-      <div class="card-head"><div class="card-title">Targets</div><div class="card-sub">Regions you track. Business discovery is manual — add real leads from your own research.</div></div>
+      <div class="card-head"><div class="card-title">Targets</div><div class="card-sub">Regions you track. Finding businesses is manual — add real leads from your own research.</div></div>
       <div class="card">
         <div class="form-row">
           <input type="text" id="tgtRegion" placeholder="Region (e.g. Cork, Ireland)" class="input">
@@ -98,31 +101,63 @@
     </section>
 
     <section class="panel" id="section-leads" style="display:none">
-      <div class="card-head"><div class="card-title">Leads (CRM)</div><div class="card-sub">Businesses found, scored, and ready to pitch.</div></div>
-      <div class="form-row">
-        <select id="leadStatus" class="input"><option value="">All statuses</option><option value="new">New</option><option value="contacted">Contacted</option><option value="pitched">Pitched</option><option value="closed">Closed</option></select>
+      <div class="card-head"><div class="card-title">Leads (CRM)</div><div class="card-sub">Every lead records where it came from. Only verified leads enter the build queue.</div></div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Add verified lead</div><div class="card-sub">You verify the details yourself; Klaudius does not discover or verify businesses.</div></div>
+        <div class="card-body">
+          <div class="form-row">
+            <input type="text" id="leadNewName" placeholder="Business name *" class="input">
+            <input type="text" id="leadNewSource" placeholder="Source * (e.g. Google Maps, referral)" class="input">
+            <input type="text" id="leadNewSourceUrl" placeholder="Source URL" class="input">
+            <input type="text" id="leadNewNiche" placeholder="Niche" class="input">
+            <input type="text" id="leadNewWebsite" placeholder="Existing website" class="input">
+            <input type="text" id="leadNewPhone" placeholder="Phone (only if you have it)" class="input">
+            <input type="text" id="leadNewEmail" placeholder="Email (only if you have it)" class="input">
+            <input type="text" id="leadNewAddress" placeholder="Address / town" class="input">
+            <input type="text" id="leadNewServices" placeholder="Services, comma separated" class="input">
+            <input type="number" id="leadNewScore" placeholder="Score (optional)" min="0" class="input">
+            <input type="text" id="leadNewScoreBasis" placeholder="Score basis (required if score > 0)" class="input">
+          </div>
+          <label class="check-row"><input type="checkbox" id="leadNewVerified" checked> I have personally verified this business exists and these details are accurate.</label>
+          <button class="btn" id="btnAddLead" style="margin-top:12px">Add verified lead</button>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:16px">
+        <select id="leadStatus" class="input"><option value="">All statuses</option><option value="new">New</option><option value="site-built">Site preview built</option><option value="pitched">Drafted</option><option value="closed">Closed</option></select>
         <input type="text" id="leadSearch" placeholder="Search name, website, niche" class="input">
       </div>
       <div class="table-wrap" id="leadsTable"></div>
     </section>
 
     <section class="panel" id="section-sites" style="display:none">
-      <div class="card-head"><div class="card-title">Sites built</div><div class="card-sub">Bespoke websites Klaudius has published for your leads.</div></div>
+      <div class="card-head"><div class="card-title">Sites</div><div class="card-sub">Private previews. A site is only publicly served after you approve and publish it.</div></div>
       <div class="table-wrap" id="sitesTable"></div>
     </section>
 
     <section class="panel" id="section-outreach" style="display:none">
-      <div class="card-head"><div class="card-title">Outreach</div><div class="card-sub">Pitch drafts you review and send yourself. Nothing is sent automatically.</div></div>
+      <div class="card-head"><div class="card-title">Outreach</div><div class="card-sub">Drafts built from the lead name, supplied services and site URL. Nothing is sent automatically.</div></div>
       <div class="table-wrap" id="outreachTable"></div>
+    </section>
+
+    <section class="panel" id="section-review" style="display:none">
+      <div class="card-head"><div class="card-title">Needs review</div><div class="card-sub">Approve previews and drafts. Confirm a send only after you actually sent it yourself.</div></div>
+      <div id="reviewList" class="review-list"></div>
     </section>
 
     <section class="panel" id="section-receptionist" style="display:none">
       <div class="card-head"><div class="card-title">Receptionist script preview</div><div class="card-sub">Demo only — no phone service is connected and no real calls are answered.</div></div>
+      <div class="card">
+        <div class="form-row">
+          <input type="text" id="recPhone" placeholder="Phone number (for the demo label)" class="input">
+          <input type="text" id="recVoice" placeholder="Voice (alloy)" class="input">
+          <button class="btn" id="btnAddRec">Add demo entry</button>
+        </div>
+      </div>
       <div class="table-wrap" id="receptionistTable"></div>
     </section>
 
     <section class="panel" id="section-runs" style="display:none">
-      <div class="card-head"><div class="card-title">Build runs</div><div class="card-sub">Builds a site for every lead that does not have one yet. No messages are sent.</div></div>
+      <div class="card-head"><div class="card-title">Build runs</div><div class="card-sub">Phases: intake → build → draft → review → done. Only verified leads without a site are processed. No discovery, publishing or sending.</div></div>
       <div class="table-wrap" id="runsTable"></div>
     </section>
 

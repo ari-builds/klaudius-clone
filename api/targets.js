@@ -1,4 +1,4 @@
-// Targets — regions/niches Klaudius scans for businesses without websites.
+// Targets — regions/niches you enter yourself. Klaudius does not discover businesses.
 const db = require('./_db');
 
 module.exports = async (req, res) => {

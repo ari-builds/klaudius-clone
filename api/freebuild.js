@@ -1,8 +1,7 @@
-// Free build — turn REAL business details the user supplies into a published preview site.
-// No invented contact data. No email is sent and none is claimed. A region-only call
-// produces a clearly-labelled sample so the tool remains honest.
+// Free build — turn REAL business details the user supplies into a private preview.
+// No invented contact data. No email is sent or claimed. A region-only call
+// produces a clearly-labelled sample, never a real lead.
 const db = require('./_db');
-const { buildSiteHtml, SYSTEMS } = require('../lib/site');
 
 const SAMPLES = {
   cork:      { name: 'Fennel & Fig Cafe', niche: 'cafe', address: 'Oliver Plunkett St, Cork', phone: '', email: '', website: '', photos: [], region: 'Cork, Ireland' },
@@ -50,7 +49,6 @@ module.exports = async (req, res) => {
 
   const targetId = db.newId('target_');
   const leadId = db.newId('lead_');
-  const siteId = db.newId('site_');
   const now = new Date().toISOString();
   const details = {
     region,
@@ -60,31 +58,35 @@ module.exports = async (req, res) => {
     services: leadData.services || [],
     design: String(body.design || '').trim(),
   };
+  const source = hasRealData ? 'user-supplied form' : 'sample';
+  const intakeStatus = hasRealData ? 'verified' : 'sample';
 
   await db.query('insert into targets (id, user_id, region, niche, status, businesses_found, created_at, updated_at) values ($1,$2,$3,$4,$5,$6,$7,$8)',
-    [targetId, 'demo-user', region || leadData.address || 'Manual', leadData.niche || 'local business', 'active', 1, now, now]);
+    [targetId, 'demo-user', region || leadData.address || 'Manual', leadData.niche || 'local business', 'active', hasRealData ? 0 : 1, now, now]);
 
-  await db.query(`insert into leads (id, user_id, target_id, name, website, phone, email, address, niche, has_website, status, score, photos, details, last_contacted_at, created_at, updated_at)
-   values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
-    [leadId, 'demo-user', targetId, leadData.name, leadData.website || '', leadData.phone || '', leadData.email || '', leadData.address || '', leadData.niche || '',
-     leadData.website ? 1 : 0, 'site-built', hasRealData ? 100 : 0, JSON.stringify(leadData.photos || []), JSON.stringify(details), null, now, now]);
+  await db.query(`insert into leads (id, user_id, target_id, name, website, phone, email, address, niche, has_website,
+      status, score, photos, details, last_contacted_at, source, source_url, verified_at, intake_status, score_basis, created_at, updated_at)
+     values ($1,'demo-user',$2,$3,$4,$5,$6,$7,$8,$9,'new',0,$10,$11,null,$12,$13,$14,$15,'',$16,$17)`,
+    [leadId, targetId, leadData.name, leadData.website || '', leadData.phone || '', leadData.email || '',
+     leadData.address || '', leadData.niche || '', leadData.website ? 1 : 0, JSON.stringify(leadData.photos || []),
+     JSON.stringify(details), source, '', hasRealData ? now : null, intakeStatus, now, now]);
 
-  const html = buildSiteHtml(leadData, { sample: !hasRealData, design: details.design });
-  const slug = `${leadData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'business'}-${siteId.slice(-6)}`;
-  const url = `https://klaudius-clone.vercel.app/site/${slug}`;
+  await db.recordEvent(leadId, 'intake', `Source: ${source}. Intake: ${intakeStatus}. No score assigned.`);
 
-  await db.query(`insert into sites (id, user_id, lead_id, url, title, design_system, pages, status, published_at, created_at, updated_at)
-   values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-    [siteId, 'demo-user', leadId, url, `${leadData.name} — Website`, JSON.stringify(SYSTEMS[details.design] || {}), JSON.stringify([{ slug, html }]), 'published', now, now, now]);
+  const site = await db.createPreviewSite(
+    { ...leadData, id: leadId, details },
+    { req, design: details.design, sample: !hasRealData }
+  );
 
   return db.json(res, 201, {
     ok: true,
     region,
     business: leadData.name,
-    siteUrl: url,
+    siteUrl: site.url,
+    previewUrl: `/api/site?slug=${encodeURIComponent(site.slug)}&token=${encodeURIComponent(site.token)}`,
     sample: !hasRealData,
     note: hasRealData
-      ? 'Preview created from the details you entered. No email was sent.'
-      : 'Sample preview only. Add real business details to build a genuine site.',
+      ? 'Private preview created from the details you entered. Not published; no email was sent.'
+      : 'Sample preview only. Add real business details to build a genuine preview.',
   });
 };

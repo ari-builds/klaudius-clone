@@ -1,7 +1,7 @@
-// Website builder — generates honest, detail-driven one-page sites for leads.
+// Website builder — generates honest, detail-driven one-page PREVIEWS for leads.
 // Uses lib/site.js so freebuild and builder produce identical output.
+// A preview is private until a human explicitly approves publishing in /api/sites.
 const db = require('./_db');
-const { buildSiteHtml, SYSTEMS } = require('../lib/site');
 
 module.exports = async (req, res) => {
   if (db.cors(req, res)) return;
@@ -13,35 +13,39 @@ module.exports = async (req, res) => {
   }
 
   if (path === '/api/builder' && req.method === 'POST') {
-    const body = await db.parseBody(req);
+    let body;
+    try { body = await db.parseBody(req); } catch { return db.json(res, 400, { error: 'Invalid request body' }); }
     const leadId = body.lead_id;
     if (!leadId) return db.json(res, 400, { error: 'lead_id required' });
 
     const leadRows = await db.query('select * from leads where id = $1', [leadId]);
     if (!leadRows.length) return db.json(res, 404, { error: 'lead not found' });
     const lead = leadRows[0];
+    if (lead.intake_status === 'sample') return db.json(res, 400, { error: 'Sample leads cannot be built into real previews' });
+    if (lead.intake_status !== 'verified') return db.json(res, 403, { error: 'Verify this lead before building a site' });
 
-    // Callers may override presentation, but never invent contact details.
-    const html = buildSiteHtml(lead, { design: body.design || (db.parseJson(lead.details, {}) || {}).design });
-    const id = db.newId('site_');
-    const now = new Date().toISOString();
-    const slug = `${String(lead.name || 'business').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'business'}-${id.slice(-6)}`;
-    const url = `https://klaudius-clone.vercel.app/site/${slug}`;
+    // The design is resolved from the details actually stored on the lead.
+    // Caller overrides are optional; no contact details are ever invented.
+    const details = db.parseJson(lead.details, {});
+    const design = String(body.design || details.design || '').trim();
+    const site = await db.createPreviewSite(lead, { req, design });
+    const previewUrl = `/api/site?slug=${encodeURIComponent(site.slug)}&token=${encodeURIComponent(site.token)}`;
 
-    await db.query(
-      `insert into sites (id, user_id, lead_id, url, title, design_system, pages, status, published_at, created_at, updated_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-      [id, 'demo-user', leadId, url, `${lead.name} — Website`, JSON.stringify(SYSTEMS[(body.design)] || {}), JSON.stringify([{ slug, html }]), 'published', now, now, now]
-    );
-    await db.query('update leads set status = $1 where id = $2', ['site-built', leadId]);
-
-    return db.json(res, 201, { ok: true, site: { id, url, slug, status: 'published' }, html });
+    return db.json(res, 201, {
+      ok: true,
+      site: { id: site.id, url: site.url, slug: site.slug, status: 'preview', design: site.design, previewUrl },
+      note: 'Private preview generated from supplied details. Not published; nothing was sent.',
+    });
   }
 
   if (m && req.method === 'GET') {
     const rows = await db.query('select * from sites where id = $1', [m[1]]);
     if (!rows.length) return db.json(res, 404, { error: 'site not found' });
-    return db.json(res, 200, { ok: true, site: rows[0] });
+    const site = rows[0];
+    const pages = db.parseJson(site.pages, []);
+    const slug = pages[0] && pages[0].slug;
+    const previewUrl = slug ? `/api/site?slug=${encodeURIComponent(slug)}&token=${encodeURIComponent(site.preview_token || '')}` : '';
+    return db.json(res, 200, { ok: true, site: { ...site, previewUrl } });
   }
 
   return db.json(res, 404, { error: 'not found' });
